@@ -1,9 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render,HttpResponse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from .models import Recipe, Ingredient, Instruction
+from .models import Recipe, Ingredient, Instruction,Favorite
+from django.shortcuts import get_object_or_404
+
+
 import json
 @csrf_exempt
 def signup(request):
@@ -107,4 +110,63 @@ def get_recipe_details(request, recipe_id):
         'instructions': [i.step for i in instructions],
     })
 
+def add_to_favorites(request, recipe_id):
+    if request.method != "POST":
+        return HttpResponse("Only POST allowed.")
+
+    try:
+        recipe = Recipe.objects.get(id=recipe_id)
+    except Recipe.DoesNotExist:
+        return JsonResponse({'error': 'Recipe not found'}, status=404)
+
+    favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+
+    if not created:
+        return JsonResponse({'message': 'Recipe already in favorites'}, status=400)
+
+    return JsonResponse({'message': 'Recipe added to favorites'}, status=201)
+
+
+def toggle_favorite(request):
+    if request.method != 'POST':
+        return HttpResponse("Only POST allowed.")
+
+    try:
+        data = json.loads(request.body)
+        recipe_id = data.get('recipe_id')
+    except (json.JSONDecodeError, KeyError, TypeError):
+        return JsonResponse({'error': 'Invalid input'}, status=400)
+
+    if not recipe_id:
+        return JsonResponse({'error': 'recipe_id is required'}, status=400)
+
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+
+    favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+
+    if not created:
+        favorite.delete()
+        return JsonResponse({'status': 'removed'})
+
+    return JsonResponse({'status': 'added'})
+
+def list_favorites(request):
+    if request.method != "GET":
+        return HttpResponse("Only GET allowed.")
+
+    favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
+    
+    recipes_data = []
+    for favorite in favorites:
+        recipe = favorite.recipe
+        recipes_data.append({
+            'id': recipe.id,
+            'name': recipe.name,
+            'description': recipe.description,
+            'course_name': recipe.course_name,
+            'time': recipe.time,
+            'image': recipe.image.url if recipe.image else None,
+        })
+
+    return JsonResponse({'favorites': recipes_data})
 # Create your views here.
