@@ -1,13 +1,14 @@
 from django.urls import path
 from . import views
 from .views import (signup, login_view, create_recipe,
-    get_all_recipes, get_recipe_details,list_favorites,add_to_favorites,toggle_favorite,ProtectedView ,logout_view)
+    get_all_recipes, get_recipe_details,list_favorites,add_to_favorites,toggle_favorite ,logout_view,protected_view)
+
 
 
 urlpatterns = [
     path('signup/', signup),
-    path('login/', login_view, name='login'),  
-    path('protected/', ProtectedView.as_view(), name='protected'), 
+    path('login/', login_view),  
+    path('protected/', protected_view, name='protected'),
     path('logout/', logout_view, name='logout'),
     path('recipes/add/', create_recipe),
     path('recipes/', get_all_recipes),
