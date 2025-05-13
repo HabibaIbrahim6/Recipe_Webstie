@@ -10,6 +10,7 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.username
     
+    
 class Recipe(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -48,3 +49,4 @@ class Favorite(models.Model):
         unique_together = ('user', 'recipe')
 
 # Create your models here.
+
