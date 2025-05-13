@@ -1,4 +1,4 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, HttpResponse,get_object_or_404  
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
@@ -206,16 +206,29 @@ def get_recipe_details(request, recipe_id):
         'instructions': [i.step for i in instructions],
     })
 
+@csrf_exempt
 def add_to_favorites(request, recipe_id):
     if request.method != "POST":
-        return HttpResponse("Only POST allowed.")
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
+
+    token = request.headers.get('Authorization')
+    if not token:
+        return JsonResponse({'error': 'Token required'}, status=400)
+    if token.startswith("Bearer "):
+        token = token[7:]
+
+    try:
+        token_obj = AuthToken.objects.get(key=token)
+        user = token_obj.user
+    except AuthToken.DoesNotExist:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
 
     try:
         recipe = Recipe.objects.get(id=recipe_id)
     except Recipe.DoesNotExist:
         return JsonResponse({'error': 'Recipe not found'}, status=404)
 
-    favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+    favorite, created = Favorite.objects.get_or_create(user=user, recipe=recipe)
 
     if not created:
         return JsonResponse({'message': 'Recipe already in favorites'}, status=400)
@@ -223,22 +236,28 @@ def add_to_favorites(request, recipe_id):
     return JsonResponse({'message': 'Recipe added to favorites'}, status=201)
 
 
-def toggle_favorite(request):
+@csrf_exempt
+def toggle_favorite(request, recipe_id):
     if request.method != 'POST':
         return HttpResponse("Only POST allowed.")
 
+    token = request.headers.get('Authorization')
+    if not token:
+        return JsonResponse({'error': 'Token required'}, status=400)
+    if token.startswith("Bearer "):
+        token = token[7:]
+
     try:
-        data = json.loads(request.body)
-        recipe_id = data.get('recipe_id')
-    except (json.JSONDecodeError, KeyError, TypeError):
-        return JsonResponse({'error': 'Invalid input'}, status=400)
+        token_obj = AuthToken.objects.get(key=token)
+        user = token_obj.user
+    except AuthToken.DoesNotExist:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+    try:
+        recipe = Recipe.objects.get(id=recipe_id)
+    except Recipe.DoesNotExist:
+        return JsonResponse({'error': f'Recipe with ID {recipe_id} not found'}, status=404)
 
-    if not recipe_id:
-        return JsonResponse({'error': 'recipe_id is required'}, status=400)
-
-    recipe = get_object_or_404(Recipe, id=recipe_id)
-
-    favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+    favorite, created = Favorite.objects.get_or_create(user=user, recipe=recipe)
 
     if not created:
         favorite.delete()
@@ -250,11 +269,26 @@ def list_favorites(request):
     if request.method != "GET":
         return HttpResponse("Only GET allowed.")
 
-    favorites = Favorite.objects.filter(user=request.user).select_related('recipe')
-    
+    token = request.headers.get('Authorization')
+    if not token:
+        return JsonResponse({'error': 'Token required'}, status=400)
+    if token.startswith("Bearer "):
+        token = token[7:]
+
+    try:
+        token_obj = AuthToken.objects.get(key=token)
+        user = token_obj.user
+    except AuthToken.DoesNotExist:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    favorites = Favorite.objects.filter(user=user).select_related('recipe')
+
     recipes_data = []
     for favorite in favorites:
         recipe = favorite.recipe
+        ingredients = recipe.ingredients.all()
+        instructions = recipe.instructions.all()
+
         recipes_data.append({
             'id': recipe.id,
             'name': recipe.name,
@@ -262,6 +296,8 @@ def list_favorites(request):
             'course_name': recipe.course_name,
             'time': recipe.time,
             'image': recipe.image.url if recipe.image else None,
+            'ingredients': [{'name': i.name, 'quantity': i.quantity} for i in ingredients],
+            'instructions': [i.step for i in instructions],
         })
 
     return JsonResponse({'favorites': recipes_data})
@@ -295,5 +331,34 @@ def search_recipes(request):
 
     return JsonResponse({'results': data})
 
+@csrf_exempt
+def get_recipes_by_category(request, course_name):
+    if request.method != "GET":
+        return JsonResponse({"error": "only GET method allowed"}, status=405)
 
+    recipes = Recipe.objects.filter(course_name__iexact=course_name).prefetch_related('ingredients', 'instructions')
+
+    data = []
+    for recipe in recipes:
+        ingredients_data = [
+            {'name': ing.name, 'quantity': ing.quantity}
+            for ing in recipe.ingredients.all()
+        ]
+        instructions_data = [
+            {'order': inst.order, 'step': inst.step}
+            for inst in recipe.instructions.all().order_by('order')
+        ]
+        data.append({
+            'id': recipe.id,
+            'name': recipe.name,
+            'description': recipe.description,
+            'course_name': recipe.course_name,
+            'time': recipe.time,
+            'image': request.build_absolute_uri(recipe.image.url) if recipe.image else None,
+            'ingredients': ingredients_data,
+            'instructions': instructions_data,
+        })
+
+    return JsonResponse({'recipes': data}, status=200)
 # Create your views here.
+
