@@ -3,16 +3,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from .models import Recipe, Ingredient, Instruction, Favorite
-from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.decorators import authentication_classes, permission_classes, api_view
+from .models import Recipe, Ingredient, Instruction, Favorite, AuthToken
 import json
-from rest_framework.authtoken.models import Token
-@csrf_exempt 
+from django.utils import timezone
+import uuid
+
+@csrf_exempt
 def login_view(request):
     if request.method == 'POST':
         try:
@@ -23,28 +19,29 @@ def login_view(request):
 
             if user:
                 user = authenticate(username=user.username, password=password)
-
-            if user:
-                token, created = Token.objects.get_or_create(user=user)
-                return JsonResponse({
-                    'id': user.id,
-                    'email': user.email,
-                    'is_admin': getattr(user.profile, 'is_admin', False),
-                    'token': token.key  
-                })
+                if not user:
+                    return JsonResponse({'error': 'The password is incorrect'}, status=401)
             else:
-                return JsonResponse({'error': 'Invalid credentials'}, status=401)
+                return JsonResponse({'error': 'The email is incorrect'}, status=401)
 
+            token_obj, created = AuthToken.objects.get_or_create(user=user)
+            if not created:
+                token_obj.key = str(uuid.uuid4())
+                token_obj.save()
+
+            return JsonResponse({
+                'id': user.id,
+                'email': user.email,
+                'is_admin': getattr(user.profile, 'is_admin', False),
+                'token': token_obj.key
+            })
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON format'}, status=400)
     else:
         return JsonResponse({'error': 'Invalid method'}, status=405)
-
-class ProtectedView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        return Response({'message': 'This is a protected view!'})
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+import re
 
 @csrf_exempt
 def signup(request):
@@ -55,34 +52,57 @@ def signup(request):
             password = data.get('password')
             is_admin_str = data.get('is_admin', "false")
             phone = data.get('phone', "")
-            email = data.get('email')  
+            email = data.get('email')
 
             if not email:
                 return JsonResponse({'error': 'Email is required'}, status=400)
+            try:
+                validate_email(email)  
+            except ValidationError:
+                return JsonResponse({'error': 'Invalid email format'}, status=400)
 
+           
             if User.objects.filter(email=email).exists():
-                return JsonResponse({'error': 'Email already exists'}, status=400)  
+                return JsonResponse({'error': 'Email already exists'}, status=400)
 
+       
+            if len(password) < 6:
+                return JsonResponse({'error': 'Password must be at least 6 characters'}, status=400)
+
+           
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({'error': 'Username already exists'}, status=400)
+
+          
             if is_admin_str not in ["true", "false"]:
                 return JsonResponse({'error': 'Invalid value for is_admin'}, status=400)
 
+          
+            if phone and not re.match(r'^\+?1?\d{9,15}$', phone):  # تحقق من الرقم بأحرف أو مع رمز الدولة
+                return JsonResponse({'error': 'Invalid phone number format'}, status=400)
+
+           
             user = User.objects.create_user(username=username, password=password, email=email)
 
-            
+           
             user.profile.is_admin = (is_admin_str == "true")
             user.profile.phone = phone
             user.profile.save()
 
-            token, created = Token.objects.get_or_create(user=user)
+           
+            token_obj, created = AuthToken.objects.get_or_create(user=user)
+            if not created:
+                token_obj.key = str(uuid.uuid4())
+                token_obj.save()
 
             return JsonResponse({
                 'message': 'User created successfully',
                 'id': user.id,
-                'email': user.email,  
+                'email': user.email,
                 'username': user.username,
                 'is_admin': user.profile.is_admin,
                 'phone': user.profile.phone,
-                'token': token.key
+                'token': token_obj.key
             }, status=201)
 
         except json.JSONDecodeError:
@@ -90,18 +110,45 @@ def signup(request):
 
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
-
-
-
-@api_view(['POST'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
+@csrf_exempt
 def logout_view(request):
+    """
+    Log out a user by deleting their authentication token.
+
+    The token should be provided in the Authorization header.
+
+    Returns:
+        JsonResponse: A JSON response with a message indicating success
+            or an error message if the token is invalid.
+    """
+    token = request.headers.get('Authorization')
+    
+    if not token:
+        return JsonResponse({'error': 'Token required'}, status=400)
+    
+  
+    if token.startswith("Bearer "):
+        token = token[7:]
+
     try:
-        request.user.auth_token.delete()
-        return Response({'message': 'Logged out successfully'}, status=200)
-    except:
-        return Response({'error': 'Something went wrong'}, status=500)
+        token_obj = AuthToken.objects.get(key=token)
+        token_obj.delete()
+        return JsonResponse({'message': 'Logged out successfully'})
+    except AuthToken.DoesNotExist:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+def protected_view(request):
+    token = request.headers.get('Authorization')
+    if not token:
+        return JsonResponse({'error': 'Token required'}, status=400)
+
+    try:
+        token_obj = AuthToken.objects.get(key=token)
+        user = token_obj.user
+    except AuthToken.DoesNotExist:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    return JsonResponse({'message': 'This is a protected view!'})
 
 @csrf_exempt
 def create_recipe(request):
