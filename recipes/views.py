@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from .models import Recipe, Ingredient, Instruction, Favorite, AuthToken
 import json
 from django.utils import timezone
+from django.db.models import Q
 import uuid
 
 @csrf_exempt
@@ -112,15 +113,6 @@ def signup(request):
 
 @csrf_exempt
 def logout_view(request):
-    """
-    Log out a user by deleting their authentication token.
-
-    The token should be provided in the Authorization header.
-
-    Returns:
-        JsonResponse: A JSON response with a message indicating success
-            or an error message if the token is invalid.
-    """
     token = request.headers.get('Authorization')
     
     if not token:
@@ -273,4 +265,35 @@ def list_favorites(request):
         })
 
     return JsonResponse({'favorites': recipes_data})
+
+def search_recipes(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Only GET method allowed'}, status=405)
+
+    query = request.GET.get('q', '').strip()
+
+    if not query:
+        return JsonResponse({'error': 'No search query provided'}, status=400)
+
+    recipes = Recipe.objects.filter(
+        Q(name__icontains=query) |
+        Q(course_name__icontains=query) |
+        Q(ingredients__name__icontains=query)
+    ).distinct()
+
+    data = []
+    for recipe in recipes:
+        data.append({
+            'id': recipe.id,
+            'name': recipe.name,
+            'description': recipe.description,
+            'course_name': recipe.course_name,
+            'time': recipe.time,
+            'noingredients': recipe.ingredients.count(),
+            'image': request.build_absolute_uri(recipe.image.url) if recipe.image else None
+        })
+
+    return JsonResponse({'results': data})
+
+
 # Create your views here.
