@@ -145,29 +145,49 @@ def protected_view(request):
 @csrf_exempt
 def create_recipe(request):
     if request.method == 'POST':
-        data = request.POST
-        image = request.FILES.get('image')
-        
-        recipe = Recipe.objects.create(
-            name=data.get('name'),
-            description=data.get('description'),
-            course_name=data.get('course_name'),
-            time=data.get('time', '00:00'),  
-            image=image
-        )
+        try:
+            data = request.POST
+            image = request.FILES.get('image')
 
-        ingredients = json.loads(data.get('ingredients', '[]'))
-        for ing in ingredients:
-            Ingredient.objects.create(recipe=recipe, name=ing['name'], quantity=ing['quantity'])
+            
+            recipe = Recipe.objects.create(
+                name=data.get('name'),
+                description=data.get('description'),
+                course_name=data.get('course_name'),
+                time=data.get('time', '00:00'),
+                image=image
+            )
 
-        recipe.noingredients = recipe.ingredients.count()
-        recipe.save()
+            ingredients_json = data.get('ingredients', '[]')
+            ingredients = json.loads(ingredients_json)
+            for ing in ingredients:
+                Ingredient.objects.create(
+                    recipe=recipe,
+                    name=ing['name'],
+                    quantity=ing['quantity']
+                )
 
-        instructions = json.loads(data.get('instructions', '[]'))
-        for step in instructions:
-            Instruction.objects.create(recipe=recipe, step=step)
+          
+            instructions_json = data.get('instructions', '[]')
+            instructions = json.loads(instructions_json)
+            for instruction in instructions:
+                Instruction.objects.create(
+                    recipe=recipe,
+                    step=instruction.get('step'),
+                    order=instruction.get('order')
+                )
 
-        return JsonResponse({'message': 'Recipe created successfully'})
+            recipe.noingredients = recipe.ingredients.count()
+            recipe.save()
+
+            return JsonResponse({'message': 'Recipe created successfully'}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
     
 def get_all_recipes(request):
     recipes = Recipe.objects.all()
@@ -360,5 +380,78 @@ def get_recipes_by_category(request, course_name):
         })
 
     return JsonResponse({'recipes': data}, status=200)
+
+@csrf_exempt
+def delete_recipe(request, recipe_id):
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Only DELETE method allowed'}, status=405)
+
+    try:
+        recipe = Recipe.objects.get(id=recipe_id)
+        recipe.delete()
+        return JsonResponse({'message': 'Recipe deleted successfully'})
+    except Recipe.DoesNotExist:
+        return JsonResponse({'error': 'Recipe not found'}, status=404)
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from .models import Recipe, Ingredient, Instruction
+from django.utils.datastructures import MultiValueDictKeyError
+@csrf_exempt
+def update_recipe(request, recipe_id):
+    if request.method == "POST":
+        try:
+            recipe = get_object_or_404(Recipe, id=recipe_id)
+
+            data = request.POST
+            image = request.FILES.get('image')
+
+
+            recipe.name = data.get('name', recipe.name)
+            recipe.description = data.get('description', recipe.description)
+            recipe.course_name = data.get('course_name', recipe.course_name)
+            recipe.time = data.get('time', recipe.time)
+
+            if image:
+                recipe.image = image
+
+            recipe.save()
+
+            
+            ingredients_json = data.get('ingredients', '[]')
+            ingredients = json.loads(ingredients_json)
+
+            
+            recipe.ingredients.all().delete()
+            for ing in ingredients:
+                Ingredient.objects.create(
+                    recipe=recipe,
+                    name=ing['name'],
+                    quantity=ing['quantity']
+                )
+
+           
+            instructions_json = data.get('instructions', '[]')
+            instructions = json.loads(instructions_json)
+
+           
+            recipe.instructions.all().delete()
+            for instruction in instructions:
+                Instruction.objects.create(
+                    recipe=recipe,
+                    step=instruction.get('step'),
+                    order=instruction.get('order')
+                )
+
+            
+            recipe.noingredients = recipe.ingredients.count()
+            recipe.save()
+
+            return JsonResponse({"message": "Recipe updated successfully!"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    else:
+        return JsonResponse({"error": "Invalid request method."}, status=400)
 # Create your views here.
 
