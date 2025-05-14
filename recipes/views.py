@@ -8,6 +8,58 @@ import json
 from django.utils import timezone
 from django.db.models import Q
 import uuid
+from django.contrib.auth.decorators import login_required, user_passes_test
+
+def is_admin(user):
+    return hasattr(user, 'profile') and user.profile.is_admin
+
+def login_page(request):
+    return render(request, 'recipes/Login.html')
+
+def signup_page(request):
+    return render(request, 'recipes/SignUp.html')
+
+@login_required
+def home_page(request):
+    return render(request, 'recipes/Home.html')
+
+@login_required
+def recipe_list_page(request):
+    return render(request, 'recipes/Recipe_List_Page.html')
+
+@login_required
+def search_page(request):
+    return render(request, 'recipes/SearchPage.html')
+
+@login_required
+def recipe_details_page(request, recipe_id):
+    return render(request, 'recipes/Recipe_details_page.html', {'recipe_id': recipe_id})
+
+@user_passes_test(is_admin)
+def admin_page(request):
+    return render(request, 'recipes/Admin.html')
+
+@user_passes_test(is_admin)
+def add_recipe_page(request):
+    return render(request, 'recipes/Add Reciepe.html')
+
+@user_passes_test(is_admin)
+def edit_recipe_page(request):
+    return render(request, 'recipes/EditRecipe.html')
+
+@login_required
+def favorite_page(request):
+    return render(request, 'recipes/Favourite Page.html')
+
+@login_required
+def categories_page(request):
+    return render(request, 'recipes/categories.html')
+
+@login_required
+def recipes_by_category(request):
+    category = request.GET.get('category')  
+    return render(request, 'recipes/recipesbycategory.html',{'category': category})
+
 
 @csrf_exempt
 def login_view(request):
