@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <link rel="stylesheet" href="{% static 'css/SearchPage.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <div class="cookhub">
+                <img src="{% static 'imgs/WhatsApp Image 2025-04-02 at 22.45.18_7308d5b7.jpg' %}"> 
+                <h1>CookHub</h1>
+            </div>
+            <div class="about">
+                <a href="{% url 'home' %}">Home</a>
+<a href="{% url 'Recipes' %}">Recipes</a>
+<a id="Favorits" href="{% url 'Favorites' %}">Favorites</a>
+<a href="{% url 'Search' %}">Find recipe</a>
+<a id="manage_recipes" href="{% url 'admin_page' %}">Manage Recipes</a>
+<a href="{% url 'categories' %}">Categories</a>
+
+
+                
+            </div>
+            <div class="about">
+                <button id="logout"><i class="fa-solid fa-arrow-right"></i> LogOut</button>
+            </div>
+        </nav>
+
+        <h1 class="finder">Recipe Finder</h1>
+
+        <div class="search-box" id="searchResults">
+            <input type="text" id="searchInput" placeholder="search recipes...">
+            <button onclick="handleSearch()">Search</button>
+        </div>
+        <div class="recipes" id="resultsContainer"></div>
+        <script>      let user = localStorage.getItem("user");
+            if(!user)
+        {
+          window.location.href ="{% url 'login' %}";
+        }   
+           let userparse = JSON.parse(user);
+           let favoritesLink = document.getElementById("Favorits");
+           let manageRecipesLink = document.getElementById("manage_recipes");
+           if(userparse.is_admin === "true"){
+              let manage_recipes = document.getElementById("manage_recipes").innerHTML="Manage recipes";
+              favoritesLink.style.display = "none";
+           }
+           else{
+              let Favorits= document.getElementById("Favorits").innerHTML = "Favorits";
+              manageRecipesLink.style.display = "none";
+           }
+        let logout = document.getElementById("logout");
+           logout.addEventListener('click', ()=>{
+              localStorage.removeItem("user");
+              window.location.href="{% url 'login' %}"
+           })</script>
+    <script  src="{% static 'js/SearchPage.js' %}"></script>
+</body>
+</html>

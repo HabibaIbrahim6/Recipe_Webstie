@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="{% static 'css/Edit Recipe.css' %}"/>
+  
+  <title>Edit Recipe</title>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <nav>
+    <div class="cookhub">
+      <img src="{% static 'imgs/WhatsApp Image 2025-04-02 at 22.45.22_80c2abde.jpg' %}"/>
+      <h1>CookHub</h1>
+    </div>
+    <div class="about">
+      <a href="{% url 'home' %}">Home</a>
+<a href="{% url 'Recipes' %}">Recipes</a>
+<a id="Favorits" href="{% url 'Favorites' %}">Favorites</a>
+<a href="{% url 'Search' %}">Find recipe</a>
+<a id="manage_recipes" href="{% url 'admin_page' %}">Manage Recipes</a>
+<a href="{% url 'categories' %}">Categories</a>
+
+    </div>
+    <div class="about">
+      <button id="logout"><i class="fa-solid fa-arrow-right"></i> LogOut</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <h2>Edit Recipe</h2>
+      <form id="recipe-form" enctype="multipart/form-data">
+        <label for="recipe-name">Recipe Name:</label>
+        <input type="text" id="recipe-name" placeholder="Enter recipe name" required>
+
+        <!-- Course Section -->
+        <label for="course">Course:</label>
+        <select id="course" required>
+          <option value="main course">Main Course</option>
+          <option value="dessert">Dessert</option>
+          <option value="appetizer">Appetizer</option>
+          
+        </select>
+
+        <label for="duration">Cook Duration (minutes):</label>
+        <input type="number" id="duration" min="1" placeholder="30" required>
+        
+        <label for="description">Recipe Description:</label>
+        <textarea id="description" placeholder="Write a short description of your recipe..." required></textarea>
+
+        <h3>Ingredients</h3>
+        <div id="ingredients-list">
+          <div class="ingredient">
+            <input type="text" placeholder="Quantity" required>
+            <select>
+              <option>gram</option>
+              <option>oz</option>
+              <option>cup</option>
+            </select>
+            <input type="text" placeholder="Ingredient Name" required>
+            <input type="number" placeholder="Calories per ingredient" required>
+            <button type="button" class="remove-btn"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <button type="button" class="add-btn">+ Add Ingredient</button>
+
+        <h3>Directions</h3>
+        <div id="directions-list">
+          <div class="direction">
+            <textarea placeholder="Write cooking instructions..." required></textarea>
+            <button type="button" class="remove-btn"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <button type="button" class="add-btn" id="add-direction-btn">+ Add Step</button>
+
+        <h3>Upload Photo</h3>
+        <input type="file" id="recipe-photo" accept="image/*" required>
+        <img id="image-preview" src="" alt="Recipe Image" width="200">
+
+        <button type="submit" class="submit-btn">Submit Recipe</button>
+      </form>
+    </div>
+  </main>
+  <script>      let user = localStorage.getItem("user");
+    if(!user)
+{
+  window.location.href ="{% url 'login' %}";
+}   
+   let userparse = JSON.parse(user);
+   let favoritesLink = document.getElementById("Favorits");
+   let manageRecipesLink = document.getElementById("manage_recipes");
+   if(userparse.is_admin === "true"){
+      let manage_recipes = document.getElementById("manage_recipes").innerHTML="Manage recipes";
+      favoritesLink.style.display = "none";
+   }
+   else{
+      let Favorits= document.getElementById("Favorits").innerHTML = "Favorits";
+      manageRecipesLink.style.display = "none";
+   }
+let logout = document.getElementById("logout");
+   logout.addEventListener('click', ()=>{
+      localStorage.removeItem("user");
+      window.location.href="{% url 'login' %}"
+   })</script>
+  <script src="{% static 'js/EditReceipe.js' %}"></script>
+</body>
+</html>
