@@ -10,8 +10,6 @@ from django.db.models import Q
 import uuid
 from django.contrib.auth.decorators import login_required, user_passes_test
 
-def is_admin(user):
-    return hasattr(user, 'profile') and user.profile.is_admin
 
 def login_page(request):
     return render(request, 'recipes/Login.html')
