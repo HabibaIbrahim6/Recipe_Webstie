@@ -1,0 +1,137 @@
+*{
+    padding:0;
+    margin:0;
+    font-family:sans-serif;
+    font-style: black;
+    box-sizing: border-box;
+}
+
+body{
+    /* background-color: #F5EBDC; */
+    height: 100vh;
+     overflow-x: hidden; 
+     background: linear-gradient(to right, #fceabb, #d35400c4); 
+}
+
+nav{
+    width:100%;
+    background-color: #D35400;
+    padding-left: 5%;
+    padding-right: 5%;
+    color: #F5EBDC;
+    font-size:larger;
+    Padding-top:0.5%;
+    padding-bottom: 0.5%;
+    font-weight:900;
+     top:0;
+    bottom: 0;
+    z-index: 1000; 
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    position : sticky;
+
+}
+nav .about{
+    display:flex;
+    gap:20px;
+}
+nav a{
+    text-decoration: none;
+    color:#F5EBDC;
+}
+.cookhub{
+    display:flex;
+    align-items: center;
+    gap:5px;
+}
+
+nav button {
+    background: #F5EBDC;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    color: #D35400;
+    font-size: 16px;
+}
+
+nav button:hover {
+    background: #E67E22;
+    color: white;
+}
+
+nav button i {
+    margin-right: 5px;
+}
+
+nav img {
+    height: 50px; 
+    border-radius: 50%; 
+}
+.content{
+    padding:0 10px;
+    width:100%;
+    height:100vh;
+    
+}
+.category-title {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 2.5rem;
+    color: #D35400;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.courses{
+    display:flex;
+    width:100%;
+    gap:15px;
+    height: 100%;
+   
+    justify-content: center; /* centers horizontally */
+    /* align-items: center;      */
+    position:relative;
+    
+}
+.appetizer,.dessert,.maincourse{
+    background:#F5EBDC;
+    margin-top:20px;
+    border-radius: 12px;
+    padding:10px;
+    text-align:center;
+    align-items: center;
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    height:65%;
+    bottom:100px;
+    transition: 0.5s;
+
+}
+.appetizer:hover, .dessert:hover, .maincourse:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    transition: 0.3s;
+}
+.appetizer img,.dessert img,.maincourse img{
+    border-radius: 5px;
+    height:auto;
+    width:100%;
+}
+.viewrecipes{
+    background-color: #D35400; 
+    color: white; 
+    border: none;
+    width:75%;
+    padding: 8px 15px;
+    margin: 0 auto;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition:0.5s;
+}
+.viewrecipes:hover{
+    background-color: #A84300; 
+    transform: scale(1.05); 
+}
