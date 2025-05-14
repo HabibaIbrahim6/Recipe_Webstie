@@ -18,4 +18,6 @@ urlpatterns = [
     path('favorites/toggle/<int:recipe_id>/',toggle_favorite),
     path('favorites/', list_favorites),
     path('categories/<str:course_name>/', get_recipes_by_category),
+    path('delete_recipe/<int:recipe_id>/', views.delete_recipe, name='delete_recipe'),
+     path('update_recipe/<int:recipe_id>/', views.update_recipe, name='update_recipe'),
 ]
