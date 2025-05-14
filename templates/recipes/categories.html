@@ -51,30 +51,43 @@
         </div>
     </div>
     <script>
-        let user = localStorage.getItem("user");
-        if(!user) {
-            window.location.href ="{% url 'login' %}";
-        }   
-        let userparse = JSON.parse(user);
-        let favoritesLink = document.getElementById("Favorits");
-   let manageRecipesLink = document.getElementById("manage_recipes");
-        if(userparse.is_admin === "true") {
-            document.getElementById("manage_recipes").innerHTML = "Manage recipes";
-            favoritesLink.style.display = "none";
-        } else {
-            document.getElementById("Favorits").innerHTML = "Favorites";
-        
-    manageRecipesLink.style.display = "none";
-        
-        
-        }
-        
-        let logout = document.getElementById("logout");
-        logout.addEventListener('click', () => {
-            localStorage.removeItem("user");
-            window.location.href = "{% url 'login' %}";
-        });
-    </script>
-    <script src="{% static 'js/categories.js' %}"></script>
+    let user = localStorage.getItem("user");
+    if (!user) {
+        window.location.href = "{% url 'login' %}";
+    }
+    let userparse = JSON.parse(user);
+    let favoritesLink = document.getElementById("Favorits");
+    let manageRecipesLink = document.getElementById("manage_recipes");
+
+    if (userparse.is_admin === "true") {
+        document.getElementById("manage_recipes").innerHTML = "Manage recipes";
+        favoritesLink.style.display = "none";
+    } else {
+        document.getElementById("Favorits").innerHTML = "Favorites";
+        manageRecipesLink.style.display = "none";
+    }
+
+    document.getElementById("logout").addEventListener('click', () => {
+        localStorage.removeItem("user");
+        window.location.href = "{% url 'login' %}";
+    });
+
+    // Correct URLs using Django template tag
+    const recipeByCategoryURL = "{% url 'recipes_by_category' %}";
+
+    document.getElementById("appetizer").onclick = function () {
+        window.location.href = recipeByCategoryURL + "?category=" + encodeURIComponent("Appetizer");
+    }
+
+    document.getElementById("dessert").onclick = function () {
+        window.location.href = recipeByCategoryURL + "?category=" + encodeURIComponent("Dessert");
+    }
+
+    document.getElementById("main").onclick = function () {
+        window.location.href = recipeByCategoryURL + "?category=" + encodeURIComponent("Main Course");
+    }
+</script>
+
+    
 </body>
 </html> 
