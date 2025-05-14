@@ -3,7 +3,7 @@ from . import views
 from .views import (signup, login_view, create_recipe,
     get_all_recipes, get_recipe_details,list_favorites,add_to_favorites,toggle_favorite ,logout_view,protected_view,search_recipes,get_recipes_by_category,
 login_page,signup_page,home_page,recipe_list_page,favorite_page,search_page,recipes_by_category
-    ,admin_page,add_recipe_page,edit_recipe_page,categories_page,recipe_details_page))
+    ,admin_page,add_recipe_page,edit_recipe_page,categories_page,recipe_details_page)
 
 
 
