@@ -127,32 +127,52 @@
         </div>
     </footer>
     
-      <script>document.getElementById("join-challenge").addEventListener("click", function () {
-        alert("🔥 Your Challenge: Try making your own homemade pizza and share it using #RecipeFinderChallenge!")
-      });
-      let user = localStorage.getItem("user");
-    if(!user) {
-        window.location.href ="{% url 'login' %}";
-    }   
-    let userparse = JSON.parse(user);
+      <script>
+      
+document.addEventListener("DOMContentLoaded", function() {
+    let token = localStorage.getItem("authToken");
+    if (!token) {
+        window.location.href = "{% url 'login' %}";
+    }
+
+    let user = localStorage.getItem("user");
+    let userparse = user ? JSON.parse(user) : {};
     let favoritesLink = document.getElementById("Favorits");
-let manageRecipesLink = document.getElementById("manage_recipes");
+    let manageRecipesLink = document.getElementById("manage_recipes");
+
     if(userparse.is_admin === "true") {
         document.getElementById("manage_recipes").innerHTML = "Manage recipes";
         favoritesLink.style.display = "none";
     } else {
         document.getElementById("Favorits").innerHTML = "Favorites";
-    
-manageRecipesLink.style.display = "none";
-    
-    
+        manageRecipesLink.style.display = "none";
     }
-    
+
     let logout = document.getElementById("logout");
     logout.addEventListener('click', () => {
-        localStorage.removeItem("user");
-        window.location.href = "{% url 'login' %}";
+        fetch("http://127.0.0.1:8000/api/logout/", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log(data.message || data.error);
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("user");
+            window.location.href = "{% url 'login' %}";
+        })
+        .catch(err => {
+            console.error("Logout error:", err);
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("user");
+            window.location.href = "{% url 'login' %}";
+        });
     });
+});
+
 </script>
 </body>
 </html>
