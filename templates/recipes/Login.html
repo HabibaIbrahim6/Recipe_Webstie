@@ -52,29 +52,37 @@
         </nav>
         <p>© 2025 Chef's Recipe. All rights reserved.</p>
     </footer>
-    <script>
-          let loginform = document.getElementById("login-form") ;
-          loginform.addEventListener("submit" , (e)=>{
-              e.preventDefault();
+  <script>
+       let loginform = document.getElementById("login-form");
 
-              let email = document.getElementById("email").value;
-          let pwd = document.getElementById("password").value;
-          let user = localStorage.getItem("user_data");
-          let userparse = JSON.parse(user);
-          if(user){
-            if(email === userparse.email && pwd === userparse.password){
-                localStorage.setItem("user" , JSON.stringify(userparse));
-                window.location.href = "{% url 'home' %}";
-            }
-            else{
-                alert("incorrect password");
-            }
-          }
-          else{
-            alert("account not found");
-          }
+loginform.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-          })
-              </script>
+    let email = document.getElementById("email").value;
+    let password = document.getElementById("password").value;
+
+    fetch('http://127.0.0.1:8000/api/login/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email, password: password })
+    })
+    .then(response => response.json())
+   .then(data => {
+    console.log(data);
+    if (data.token) {
+        localStorage.setItem('authToken', data.token);
+
+        alert("Login successful!");
+        window.location.href = "{% url 'home' %}"; 
+    } else {
+        alert(data.error || "Invalid credentials.");
+    }
+})
+
+});
+
+    </script>
 </body>
 </html>
