@@ -17,7 +17,6 @@ def login_page(request):
 def signup_page(request):
     return render(request, 'recipes/SignUp.html')
 
-@login_required
 def home_page(request):
     return render(request, 'recipes/Home.html')
 
