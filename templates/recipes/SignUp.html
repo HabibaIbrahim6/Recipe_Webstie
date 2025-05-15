@@ -110,17 +110,34 @@
             if(pwd != ConfirmPWD){
                 alert("pwd donot match");
             }
-            else{
-                let user={
-                    email:email,
-                    password:pwd,
-                    is_admin:is_admin,
-                }
-                let userdata = localStorage.setItem("user_data" , JSON.stringify(user));
-                alert("Sign up have been done successfully ");
-                window.location.href="{% url 'login' %}"
+             const userData = {
+            username: username,
+            email: email,
+            password: pwd,
+            phone: mobno,
+            is_admin: is_admin
+        };
+        fetch("http://127.0.0.1:8000/api/signup/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(userData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.id) {
+                alert("Sign up has been done successfully!");
+                window.location.href = "{% url 'login' %}";
+            } else {
+                alert("Error: " + (data.message || JSON.stringify(data)));
             }
         })
+        .catch(error => {
+            alert("An error occurred: " + error.message);
+        });
+    });
+        
 
     </script>
 </body>
