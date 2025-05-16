@@ -503,4 +503,45 @@ def update_recipe(request, recipe_id):
     else:
         return JsonResponse({"error": "Invalid request method."}, status=400)
 # Create your views here.
+# views.py
+from rest_framework import generics
+from .models import Recipe
+from .serializers import RecipeSerializer
+from rest_framework.filters import SearchFilter
 
+class RecipeSearchAPIView(generics.ListAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['name']
+
+def is_admin(user):
+    return hasattr(user, 'profile') and user.profile.is_admin
+
+def get_user_from_token(request):
+    token = request.headers.get('Authorization')
+    if not token or not token.startswith("Bearer "):
+        return None
+    token = token[7:]
+    try:
+        return AuthToken.objects.get(key=token).user
+    except AuthToken.DoesNotExist:
+        return None
+
+@csrf_exempt
+def list_favorites(request):
+    if request.method != "GET":
+        return JsonResponse({'error': 'Only GET allowed'}, status=405)
+
+    user = get_user_from_token(request)
+    if not user:
+        return JsonResponse({'error': 'Invalid token'}, status=401)
+
+    favorites = Favorite.objects.filter(user=user)
+    data = [{
+        'id': fav.recipe.id,
+        'name': fav.recipe.name,
+        'image': request.build_absolute_uri(fav.recipe.image.url),
+    } for fav in favorites]
+
+    return JsonResponse({'favorites': data})
