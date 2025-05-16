@@ -1,16 +1,22 @@
-document.getElementById("searchInput").addEventListener("input", async function () {
-  const query = this.value.trim();
-  const resultsContainer = document.getElementById("resultsContainer");
+document.getElementById("searchBtn").addEventListener("click", async function () {
+  const query = document.getElementById("searchInput").value.trim();
+  const resultsContainer = document.getElementById("recipeList");
   resultsContainer.innerHTML = ""; 
-  if (query === "") return;
+
+  if (query === "") {
+    resultsContainer.innerHTML = "<p>Please enter a search term.</p>";
+    return;
+  }
+
   try {
-    const response = await fetch(`https://api.example.com/recipes?search=${query}`);
+    const response = await fetch(`/api/search-recipes/?search=${encodeURIComponent(query)}`);
     const data = await response.json();
 
     if (data.length === 0) {
       resultsContainer.innerHTML = "<p>No recipes found.</p>";
       return;
     }
+
     data.forEach(recipe => {
       const card = document.createElement("div");
       card.className = "recipe-card";
@@ -19,17 +25,12 @@ document.getElementById("searchInput").addEventListener("input", async function 
         <img src="${recipe.image}" alt="${recipe.title}">
         <h3>${recipe.title}</h3>
         <p>${recipe.description.slice(0, 100)}...</p>
-        <button class="view-details" data-id="${recipe.id}">View Details</button>
+        <a href="/recipe-details/${recipe.id}/"><button class="view-details">View Details</button></a>
       `;
+
       resultsContainer.appendChild(card);
     });
-    document.querySelectorAll(".view-details").forEach(button => {
-      button.addEventListener("click", function () {
-        const recipeId = this.dataset.id;
-        localStorage.setItem("selectedRecipeId", recipeId);
-        window.location.href = "details.html";
-      });
-    });
+
   } catch (error) {
     resultsContainer.innerHTML = "<p>Error loading recipes.</p>";
     console.error(error);
