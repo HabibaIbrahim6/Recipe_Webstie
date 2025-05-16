@@ -1,114 +1,37 @@
-function searchRecipes(query) {
-  const storedRecipes = JSON.parse(localStorage.getItem('allRecipes')) || [];
+document.getElementById("searchInput").addEventListener("input", async function () {
+  const query = this.value.trim();
+  const resultsContainer = document.getElementById("resultsContainer");
+  resultsContainer.innerHTML = ""; 
+  if (query === "") return;
+  try {
+    const response = await fetch(`https://api.example.com/recipes?search=${query}`);
+    const data = await response.json();
 
-  return storedRecipes.filter(recipe => {
-      const nameMatch = recipe.name.toLowerCase().includes(query.toLowerCase());
+    if (data.length === 0) {
+      resultsContainer.innerHTML = "<p>No recipes found.</p>";
+      return;
+    }
+    data.forEach(recipe => {
+      const card = document.createElement("div");
+      card.className = "recipe-card";
 
-      const ingredientMatch = recipe.ingredients.some(ingredient =>
-          ingredient.name.toLowerCase().includes(query.toLowerCase())
-      );
-
-      const countMatch = recipe.ingredients.length === parseInt(query);
-
-      return nameMatch || ingredientMatch || countMatch;
-  });
-}
-
-function handleSearch() {
-  const query = document.getElementById('searchInput').value.trim();
-  const results = searchRecipes(query);
-  const container = document.getElementById('searchResults');
-
-  const resultContainer = document.getElementById('resultsContainer');
-  resultContainer.innerHTML = '';
-
-  if (results.length > 0) {
-      results.forEach(recipe => {
-          const div = document.createElement('div');
-          div.innerHTML = `
-              <div class="recipe-card">
-                  <img src="${recipe.image}" alt="${recipe.name}" />
-                  <h3>${recipe.name}</h3>
-                  <p>${recipe.description}</p>
-                  <p><strong>Ingredients:</strong> ${recipe.ingredients.map(ing => ing.name).join(', ')}</p>
-              </div>
-          `;
-          container.appendChild(div);
+      card.innerHTML = `
+        <img src="${recipe.image}" alt="${recipe.title}">
+        <h3>${recipe.title}</h3>
+        <p>${recipe.description.slice(0, 100)}...</p>
+        <button class="view-details" data-id="${recipe.id}">View Details</button>
+      `;
+      resultsContainer.appendChild(card);
+    });
+    document.querySelectorAll(".view-details").forEach(button => {
+      button.addEventListener("click", function () {
+        const recipeId = this.dataset.id;
+        localStorage.setItem("selectedRecipeId", recipeId);
+        window.location.href = "details.html";
       });
-  } 
-  else {
-      const notFound = document.createElement('p');
-      notFound.className = 'not-found';
-      notFound.textContent = 'No results found';
-
-      const searchAgainBtn = document.createElement('button');
-      searchAgainBtn.textContent = 'Search Again';
-      searchAgainBtn.className = 'search-again-btn';
-      searchAgainBtn.onclick = () => {
-          document.getElementById('searchInput').value = '';
-          document.getElementById('searchInput').focus();
-          container.innerHTML = ''; 
-      };
-
-      container.appendChild(notFound);
-      container.appendChild(searchAgainBtn);
+    });
+  } catch (error) {
+    resultsContainer.innerHTML = "<p>Error loading recipes.</p>";
+    console.error(error);
   }
-}
-function handleSearch() {
-  const searchInput = document.getElementById('searchInput');
-  const query = searchInput.value.toLowerCase().trim();
-  const resultContainer = document.getElementById('resultsContainer') || createResultsContainer();
-  resultContainer.innerHTML = ''; 
-
-  const recipes = JSON.parse(localStorage.getItem('allRecipes')) || [];
-
-  let found = false;
-
-  recipes.forEach(recipe => {
-      const nameMatch = recipe.name.toLowerCase().includes(query);
-      const ingredientsMatch = recipe.ingredients.some(ing =>
-          ing.name.toLowerCase().includes(query)
-      );
-      const countMatch = recipe.noingredients === query;
-
-      if (nameMatch || ingredientsMatch || countMatch) {
-          found = true;
-
-          const recipeDiv = document.createElement('div');
-          recipeDiv.classList.add('recipe');
-          recipeDiv.innerHTML = `
-              <img src="${recipe.image}" alt="${recipe.name}">
-              <h3>${recipe.name}</h3>
-              <p>${recipe.description}</p>
-              <p><strong>Time:</strong> ${recipe.time}</p>
-              <p><strong>Ingredients:</strong> ${recipe.ingredients.length}</p>
-          `;
-          resultContainer.appendChild(recipeDiv);
-      }
-  });
-
-  if (!found) {
-      const notFoundMessage = document.createElement('div');
-      notFoundMessage.className = 'not-found';
-      notFoundMessage.textContent = 'No results found.';
-
-      const againButton = document.createElement('button');
-      againButton.className = 'search-again-btn';
-      againButton.textContent = 'Search Again';
-      againButton.onclick = () => {
-          searchInput.value = '';
-          searchInput.focus();
-          resultContainer.innerHTML = '';
-      };
-
-      resultContainer.appendChild(notFoundMessage);
-      resultContainer.appendChild(againButton);
-  }
-}
-function createResultsContainer() {
-  const container = document.createElement('div');
-  container.className = 'recipes';
-  container.id = 'resultsContainer';
-  document.body.appendChild(container);
-  return container;
-}
+});
