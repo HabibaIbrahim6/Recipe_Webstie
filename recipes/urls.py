@@ -22,7 +22,7 @@ urlpatterns = [
     path('categories/<str:course_name>/', get_recipes_by_category),
     path('delete_recipe/<int:recipe_id>/', views.delete_recipe, name='delete_recipe'),
      path('update_recipe/<int:recipe_id>/', views.update_recipe, name='update_recipe'),
-    path('Login/', login_page, name='login'),
+    path('', login_page, name='login'),
     path('signUp/',signup_page, name='signup'),
     path('home/',home_page, name='home'),
     path('Recipes/',recipe_list_page, name='Recipes'),
