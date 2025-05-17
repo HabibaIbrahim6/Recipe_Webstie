@@ -31,6 +31,9 @@ def search_page(request):
 @login_required
 def recipe_details_page(request, recipe_id):
     return render(request, 'recipes/Recipe_details_page.html', {'recipe_id': recipe_id})
+    
+def is_admin(user):
+    return user.is_authenticated and user.is_staff  
 
 @user_passes_test(is_admin)
 def admin_page(request):
