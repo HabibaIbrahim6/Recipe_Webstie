@@ -20,15 +20,14 @@ def signup_page(request):
 def home_page(request):
     return render(request, 'recipes/Home.html')
 
-@login_required
+
 def recipe_list_page(request):
     return render(request, 'recipes/Recipe_List_Page.html')
 
-@login_required
+
 def search_page(request):
     return render(request, 'recipes/SearchPage.html')
 
-@login_required
 def recipe_details_page(request, recipe_id):
     return render(request, 'recipes/Recipe_details_page.html', {'recipe_id': recipe_id})
     
@@ -47,15 +46,13 @@ def add_recipe_page(request):
 def edit_recipe_page(request):
     return render(request, 'recipes/EditRecipe.html')
 
-@login_required
 def favorite_page(request):
     return render(request, 'recipes/Favourite Page.html')
 
-@login_required
 def categories_page(request):
     return render(request, 'recipes/categories.html')
 
-@login_required
+
 def recipes_by_category(request):
     category = request.GET.get('category')  
     return render(request, 'recipes/recipesbycategory.html',{'category': category})
