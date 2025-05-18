@@ -12,12 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
   photoInput.addEventListener("change", function(e) {
     if (e.target.files && e.target.files[0]) {
       const reader = new FileReader();
-      
       reader.onload = function(event) {
-      
         imagePreviewContainer.innerHTML = '';
-        
-  
         const previewImg = document.createElement('img');
         previewImg.src = event.target.result;
         previewImg.style.maxWidth = '200px';
@@ -25,10 +21,8 @@ document.addEventListener("DOMContentLoaded", function () {
         previewImg.style.display = 'block';
         previewImg.style.borderRadius = '4px';
         previewImg.style.margin = '10px 0';
-        
         imagePreviewContainer.appendChild(previewImg);
       };
-      
       reader.readAsDataURL(e.target.files[0]);
     }
   });
@@ -48,10 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <button type="button" class="remove-btn"><i class="fas fa-times"></i></button>
     `;
     ingredientsList.appendChild(ingredientDiv);
-
-    ingredientDiv.querySelector(".remove-btn").addEventListener("click", () => {
-      ingredientDiv.remove();
-    });
+    ingredientDiv.querySelector(".remove-btn").addEventListener("click", () => ingredientDiv.remove());
   });
 
   addDirectionBtn.addEventListener("click", function () {
@@ -62,31 +53,28 @@ document.addEventListener("DOMContentLoaded", function () {
       <button type="button" class="remove-btn"><i class="fas fa-times"></i></button>
     `;
     directionsList.appendChild(directionDiv);
-
-    directionDiv.querySelector(".remove-btn").addEventListener("click", () => {
-      directionDiv.remove();
-    });
+    directionDiv.querySelector(".remove-btn").addEventListener("click", () => directionDiv.remove());
   });
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-  
+
     const name = document.getElementById("recipe-name").value;
-    const courseName = document.getElementById("course")?.value || "main course"; 
+    const courseName = document.getElementById("course")?.value || "main course";
     const duration = document.getElementById("duration").value;
     const description = document.getElementById("description")?.value || "";
-  
+
     if (!name || !duration || photoInput.files.length === 0) {
       alert("Please fill in all required fields including the recipe photo.");
       return;
     }
-  
+
     const ingredients = Array.from(ingredientsList.querySelectorAll(".ingredient")).map((ing, index) => {
       const quantityInput = ing.querySelectorAll("input[type='text']")[0];
       const nameInput = ing.querySelectorAll("input[type='text']")[1];
       const caloriesInput = ing.querySelector("input[type='number']");
       const unit = ing.querySelector("select").value;
-  
+
       return {
         id: index + 1,
         name: nameInput.value.trim(),
@@ -94,48 +82,44 @@ document.addEventListener("DOMContentLoaded", function () {
         calories: parseInt(caloriesInput.value) || 0
       };
     });
-  
-    // 🔥 UPDATE calories in localStorage
-    let caloriesData = JSON.parse(localStorage.getItem("calories")) || {};
-  
-    ingredients.forEach(ing => {
-      if (ing.name && ing.calories > 0) {
-        caloriesData[ing.name] = ing.calories;
-      }
-    });
-  
-    localStorage.setItem("calories", JSON.stringify(caloriesData));
-  
+
     const instructions = Array.from(directionsList.querySelectorAll("textarea"))
       .map(textArea => textArea.value.trim())
-      .filter(instruction => instruction); 
-  
+      .filter(instruction => instruction);
+
     if (ingredients.length === 0 || instructions.length === 0) {
       alert("Please add at least one ingredient and one instruction.");
       return;
     }
-  
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const newRecipe = {
-        id: Date.now(),
-        name: name,
-        courseName: courseName,
-        description: description,
-        image: event.target.result,
-        time: `${duration} min`,
-        noingredients: ingredients.length.toString(),
-        ingredients: ingredients.map(({ id, name, quantity }) => ({ id, name, quantity })), // Only save name/quantity
-        instructions: instructions
-      };
-  
-      let recipes = JSON.parse(localStorage.getItem("recipes")) || [];
-      recipes.push(newRecipe);
-      localStorage.setItem("recipes", JSON.stringify(recipes));
+
+    // Prepare data to send
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("courseName", courseName);
+    formData.append("description", description);
+    formData.append("time", `${duration} min`);
+    formData.append("image", photoInput.files[0]); // attach the image file
+    formData.append("ingredients", JSON.stringify(ingredients));
+    formData.append("instructions", JSON.stringify(instructions));
+
+    // Send POST request to API
+    fetch("https://api.example.com/recipes/", {
+      method: "POST",
+      body: formData,
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Failed to create recipe");
+      }
+      return response.json();
+    })
+    .then(data => {
+      alert("Recipe created successfully!");
       window.location.href = "Recipe_List_Page.html";
-    };
-  
-    reader.readAsDataURL(photoInput.files[0]); 
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Error submitting recipe. Please try again.");
+    });
   });
-  
 });
