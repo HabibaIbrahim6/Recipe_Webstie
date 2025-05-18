@@ -72,20 +72,17 @@
         window.location.href = "{% url 'login' %}";
     });
 
-    // Correct URLs using Django template tag
-    const recipeByCategoryURL = "{% url 'recipes_by_category' %}";
-
     document.getElementById("appetizer").onclick = function () {
-        window.location.href = recipeByCategoryURL + "?category=" + encodeURIComponent("Appetizer");
-    }
+            window.location.href = "/api/recipes_by_category/Appetizer/";
+        }
 
-    document.getElementById("dessert").onclick = function () {
-        window.location.href = recipeByCategoryURL + "?category=" + encodeURIComponent("Dessert");
-    }
+        document.getElementById("dessert").onclick = function () {
+            window.location.href = "/api/recipes_by_category/Dessert/";
+        }
 
-    document.getElementById("main").onclick = function () {
-        window.location.href = recipeByCategoryURL + "?category=" + encodeURIComponent("Main Course");
-    }
+        document.getElementById("main").onclick = function () {
+            window.location.href = "/api/recipes_by_category/Main Course/";
+        }
 </script>
 
     
