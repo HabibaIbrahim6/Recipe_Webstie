@@ -585,3 +585,58 @@ def update_recipe(request, recipe_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+
+class RecipeCreateView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, format=None):
+        try:
+            # قراءة البيانات من request
+            name = request.data.get("name")
+            course_name = request.data.get("courseName")
+            description = request.data.get("description")
+            time = request.data.get("time")
+            image = request.FILES.get("image")
+
+            ingredients_data = request.data.get("ingredients")
+            instructions_data = request.data.get("instructions")
+
+            if not all([name, time, ingredients_data, instructions_data]):
+                return Response({"error": "Missing required fields."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # تحويل الـ JSON strings إلى Python lists
+            import json
+            ingredients = json.loads(ingredients_data)
+            instructions = json.loads(instructions_data)
+
+            # إنشاء Recipe
+            recipe = Recipe.objects.create(
+                name=name,
+                course_name=course_name,
+                description=description,
+                time=time,
+                image=image
+            )
+
+            # إنشاء Ingredients
+            for ing in ingredients:
+                Ingredient.objects.create(
+                    recipe=recipe,
+                    name=ing["name"],
+                    quantity=ing["quantity"],
+                    calories=ing.get("calories", 0)
+                )
+
+            # إنشاء Instructions
+            for step in instructions:
+                Instruction.objects.create(
+                    recipe=recipe,
+                    step=step
+                )
+
+            return Response({"message": "Recipe created successfully."}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
