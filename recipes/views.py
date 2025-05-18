@@ -545,3 +545,43 @@ def list_favorites(request):
     } for fav in favorites]
 
     return JsonResponse({'favorites': data})
+
+@csrf_exempt
+def update_recipe(request, recipe_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+    
+    try:
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+
+        data = request.POST
+        image = request.FILES.get('image')
+
+        recipe.name = data.get('name', recipe.name)
+        recipe.description = data.get('description', recipe.description)
+        recipe.course_name = data.get('course_name', recipe.course_name)
+        recipe.time = data.get('time', recipe.time)
+        if image:
+            recipe.image = image
+        recipe.save()
+
+    
+        recipe.ingredients.all().delete()
+        ingredients = json.loads(data.get('ingredients', '[]'))
+        for ing in ingredients:
+            Ingredient.objects.create(recipe=recipe, name=ing['name'], quantity=ing['quantity'])
+
+        # تحديث الخطوات
+        recipe.instructions.all().delete()
+        instructions = json.loads(data.get('instructions', '[]'))
+        for step in instructions:
+            Instruction.objects.create(recipe=recipe, step=step.get('step'), order=step.get('order'))
+
+        recipe.noingredients = recipe.ingredients.count()
+        recipe.save()
+
+        return JsonResponse({'message': 'Recipe updated successfully'}, status=200)
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
