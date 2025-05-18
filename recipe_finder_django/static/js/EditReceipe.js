@@ -1,22 +1,31 @@
 document.addEventListener("DOMContentLoaded", function () {
-
   const recipePhotoInput = document.getElementById("recipe-photo");
   const imagePreview = document.getElementById("image-preview");
   const ingredientsList = document.getElementById("ingredients-list");
   const directionsList = document.getElementById("directions-list");
   const recipeForm = document.getElementById("recipe-form");
 
-  let storedRecipe = JSON.parse(localStorage.getItem("selectedRecipe"));
+  let storedRecipe = null;
+  const recipeId = new URLSearchParams(window.location.search).get("id");
   let caloriesPerIngredient = JSON.parse(localStorage.getItem("calories")) || {};
 
-  if (storedRecipe) {
-    document.getElementById("recipe-name").value = storedRecipe.name;
-    document.getElementById("duration").value = parseInt(storedRecipe.time) || 30;
-    document.getElementById("description").value = storedRecipe.description;
-    document.getElementById("course").value = storedRecipe.courseName;
+  // ✅ Fetch recipe data from API
+  fetch(`https://api.example.com/recipes/${recipeId}/`)
+    .then(res => res.json())
+    .then(data => {
+      storedRecipe = data;
+      populateFormWithRecipe(storedRecipe);
+    })
+    .catch(error => console.error("Error fetching recipe:", error));
+
+  function populateFormWithRecipe(recipe) {
+    document.getElementById("recipe-name").value = recipe.name;
+    document.getElementById("duration").value = parseInt(recipe.time) || 30;
+    document.getElementById("description").value = recipe.description;
+    document.getElementById("course").value = recipe.courseName;
 
     ingredientsList.innerHTML = "";
-    storedRecipe.ingredients.forEach(ingredient => {
+    recipe.ingredients.forEach(ingredient => {
       const [quantity, unit] = parseQuantity(ingredient.quantity);
       const cal = ingredient.calories || caloriesPerIngredient[ingredient.name] || 0;
 
@@ -34,10 +43,14 @@ document.addEventListener("DOMContentLoaded", function () {
         <button type="button" class="remove-btn"><i class="fas fa-times"></i></button>
       `;
       ingredientsList.appendChild(ingredientDiv);
+
+      ingredientDiv.querySelector(".remove-btn").addEventListener("click", () => {
+        ingredientsList.removeChild(ingredientDiv);
+      });
     });
 
     directionsList.innerHTML = "";
-    storedRecipe.instructions.forEach(step => {
+    recipe.instructions.forEach(step => {
       const directionDiv = document.createElement("div");
       directionDiv.classList.add("direction");
       directionDiv.innerHTML = `
@@ -45,10 +58,14 @@ document.addEventListener("DOMContentLoaded", function () {
         <button type="button" class="remove-btn"><i class="fas fa-times"></i></button>
       `;
       directionsList.appendChild(directionDiv);
+
+      directionDiv.querySelector(".remove-btn").addEventListener("click", () => {
+        directionsList.removeChild(directionDiv);
+      });
     });
 
-    if (storedRecipe.image) {
-      imagePreview.src = storedRecipe.image;
+    if (recipe.image) {
+      imagePreview.src = recipe.image;
       imagePreview.style.display = 'block';
     }
   }
@@ -74,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
     ingredientsList.appendChild(ingredientDiv);
 
-    ingredientDiv.querySelector(".remove-btn").addEventListener("click", function () {
+    ingredientDiv.querySelector(".remove-btn").addEventListener("click", () => {
       ingredientsList.removeChild(ingredientDiv);
     });
   });
@@ -88,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
     directionsList.appendChild(directionDiv);
 
-    directionDiv.querySelector(".remove-btn").addEventListener("click", function () {
+    directionDiv.querySelector(".remove-btn").addEventListener("click", () => {
       directionsList.removeChild(directionDiv);
     });
   });
@@ -121,7 +138,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const name = div.children[2].value;
         const calories = parseInt(div.children[3].value) || 0;
 
-        // ✅ يتم تحديث السعرات دومًا في localStorage
         caloriesPerIngredient[name] = calories;
 
         return {
@@ -134,33 +150,27 @@ document.addEventListener("DOMContentLoaded", function () {
       instructions: Array.from(document.querySelectorAll("#directions-list textarea")).map(textarea => textarea.value)
     };
 
-    
     localStorage.setItem("calories", JSON.stringify(caloriesPerIngredient));
 
-    let recipes = JSON.parse(localStorage.getItem("recipes")) || [];
-    const recipeIndex = recipes.findIndex(r => r.id === storedRecipe.id);
-    if (recipeIndex !== -1) {
-      recipes[recipeIndex] = updatedRecipe;
-    } else {
-      recipes.push(updatedRecipe);
-    }
-    localStorage.setItem("recipes", JSON.stringify(recipes));
-
-    let allRecipes = JSON.parse(localStorage.getItem("allRecipes")) || [];
-    const allIndex = allRecipes.findIndex(r => r.id === storedRecipe.id);
-    if (allIndex !== -1) {
-      allRecipes[allIndex] = updatedRecipe;
-    } else {
-      allRecipes.push(updatedRecipe);
-    }
-    localStorage.setItem("allRecipes", JSON.stringify(allRecipes));
-
-    localStorage.setItem('recipeUpdated', JSON.stringify({
-      id: updatedRecipe.id,
-      timestamp: Date.now()
-    }));
-
-    alert("Recipe updated successfully!");
-    window.location.href = "Recipe_List_Page.html";
+    // ✅ Send updated recipe to API (PUT)
+    fetch(`https://api.example.com/recipes/${storedRecipe.id}/`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(updatedRecipe)
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to update recipe.");
+      return res.json();
+    })
+    .then(data => {
+      alert("Recipe updated successfully!");
+      window.location.href = "Recipe_List_Page.html";
+    })
+    .catch(error => {
+      console.error("Error updating recipe:", error);
+      alert("There was a problem updating the recipe.");
+    });
   });
 });
