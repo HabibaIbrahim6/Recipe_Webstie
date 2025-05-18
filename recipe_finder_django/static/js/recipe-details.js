@@ -1,30 +1,35 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const recipe = JSON.parse(localStorage.getItem("selectedRecipe"));
+document.addEventListener("DOMContentLoaded", async function () { 
+  const recipeId = window.recipeId;
 
-    document.getElementsByClassName("title")[0].textContent = recipe.name;
-    document.getElementsByClassName("recipe-img")[0].src = recipe.image;
-    document.getElementsByClassName("time")[0].textContent= ` ${recipe.time}`;
-    document.getElementsByClassName("noingredients")[0].textContent = ` ${recipe.noingredients} ingredients`;
+  try {
+    const response = await fetch(`/api/recipes/${recipeId}/`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const recipe = await response.json();
+
+    document.querySelector(".title").textContent = recipe.name;
+    document.querySelector(".recipe-img").src = recipe.image;
+    document.querySelector(".time").textContent = `${recipe.time}`;
+    document.querySelector(".noingredients").textContent = `${recipe.noingredients} ingredients`;
 
     const ingredientList = document.querySelector(".ingredients ul");
+    ingredientList.innerHTML = "";
     recipe.ingredients.forEach(ingredient => {
       const li = document.createElement("li");
       li.textContent = `${ingredient.name} - ${ingredient.quantity}`;
       ingredientList.appendChild(li);
     });
+
     const instructionList = document.querySelector(".instructions ul");
+    instructionList.innerHTML = "";
     recipe.instructions.forEach(instruction => {
       const li = document.createElement("li");
-      li.textContent = `${instruction}`;
+      li.textContent = instruction;
       instructionList.appendChild(li);
     });
-  
-});
 
-let calorybtn = document.getElementsByClassName("calorycalc")[0];
-calorybtn.onclick = function () {
-  let targetpage = calorybtn.getAttribute("data-target");
-  window.location.href = targetpage;
-};
+  } catch (error) {
+    console.error("Error loading recipe details:", error);
+  }
+});
 
   
