@@ -53,9 +53,9 @@ def categories_page(request):
     return render(request, 'recipes/categories.html')
 
 
-def recipes_by_category(request):
-    category = request.GET.get('category')  
-    return render(request, 'recipes/recipesbycategory.html',{'category': category})
+def recipes_by_category(request, course_name):
+    context = {'course_name': course_name}
+    return render(request, 'recipes/recipesbycategory.html', context)
 
 
 @csrf_exempt
@@ -286,6 +286,8 @@ def add_to_favorites(request, recipe_id):
     if token.startswith("Bearer "):
         token = token[7:]
 
+    print("Token received:", token)  # Debug log
+
     try:
         token_obj = AuthToken.objects.get(key=token)
         user = token_obj.user
@@ -303,7 +305,6 @@ def add_to_favorites(request, recipe_id):
         return JsonResponse({'message': 'Recipe already in favorites'}, status=400)
 
     return JsonResponse({'message': 'Recipe added to favorites'}, status=201)
-
 
 @csrf_exempt
 def toggle_favorite(request, recipe_id):
