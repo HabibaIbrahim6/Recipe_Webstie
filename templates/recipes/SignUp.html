@@ -2,11 +2,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sign Up | Chef's Recipe</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/SignUpStyle.css' %}">
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="{% static 'css/SignUpStyle.css' %}" />
 </head>
 <body>
     <div class="container">
@@ -15,77 +18,94 @@
                 <h1>Join Our Community</h1>
                 <p>Create your account to access thousands of recipes</p>
             </div>
-            
+
             <form id="signupform">
                 <div class="form-group">
                     <div class="input-field">
                         <i class="fas fa-user"></i>
-                        <input id="UserName" type="text" placeholder="UserName" required>
+                        <input
+                            id="UserName"
+                            name="username"
+                            type="text"
+                            placeholder="UserName"
+                            required
+                        />
                     </div>
-                    
+
                     <div class="input-field">
                         <i class="fas fa-envelope"></i>
-                        <input id="Email" type="email" placeholder="Email" required>
+                        <input
+                            id="Email"
+                            name="email"
+                            type="email"
+                            placeholder="Email"
+                            required
+                        />
                     </div>
-                    
+
                     <div class="input-field">
                         <i class="fas fa-lock"></i>
-                        <input id="Password" type="password" placeholder="Password" required>
+                        <input
+                            id="Password"
+                            name="password"
+                            type="password"
+                            placeholder="Password"
+                            required
+                        />
                     </div>
-                    
+
                     <div class="input-field">
                         <i class="fas fa-lock"></i>
-                        <input id="ConfirmPWD" type="password" placeholder="Confirm Password" required>
+                        <input
+                            id="ConfirmPWD"
+                            type="password"
+                            placeholder="Confirm Password"
+                            required
+                        />
                     </div>
-                    
+
                     <div class="input-field">
                         <i class="fas fa-phone"></i>
-                        <input id="MOBNO" type="tel" placeholder="Mobile Number">
+                        <input
+                            id="MOBNO"
+                            name="phone"
+                            type="tel"
+                            placeholder="Mobile Number"
+                        />
                     </div>
-                    
+
                     <div class="input-field">
                         <i class="fas fa-calendar"></i>
-                        <input id="Date" type="date" placeholder="Date of Birth">
+                        <input
+                            id="Date"
+                            name="date_of_birth"
+                            type="date"
+                            placeholder="Date of Birth"
+                        />
                     </div>
-                    
-                    <!-- <select required>
-                        <option value="" disabled selected>Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                    </select> -->
-                    <select id="isadmin" required>
+
+                    <select id="isadmin" name="is_admin" required>
                         <option value="" disabled selected>Is_admin</option>
                         <option value="true">true</option>
                         <option value="false">false</option>
                     </select>
                 </div>
-                
+
                 <button type="submit" class="signup-button">
-                    <i class="fas fa-utensils" style="margin-right: 8px;"></i> Sign Up
+                    <i class="fas fa-utensils" style="margin-right: 8px"></i>
+                    Sign Up
                 </button>
-                
+
                 <div class="login-link">
-                    <p>Already have an account? <a href="{% url 'login' %}">Login Now</a></p>
-                </div>
-                
-                <!-- <div class="social-signup">
-                    <p>Or sign up with</p>
-                    <div class="social-icons">
-                        <div class="social-icon facebook">
-                            <i class="fab fa-facebook-f"></i>
-                        </div>
-                        <div class="social-icon google">
-                            <i class="fab fa-google"></i>
-                        </div>
-                        <div class="social-icon apple">
-                            <i class="fab fa-apple"></i>
-                        </div>
-                    </div> -->
+                    <p>
+                        Already have an account?
+                        <a href="{% url 'login' %}">Login Now</a>
+                    </p>
                 </div>
             </form>
         </div>
     </div>
+
     <footer>
         <nav>
             <a href="#">Explore</a>
@@ -95,50 +115,57 @@
         </nav>
         <p>© 2025 Chef's Recipe. All rights reserved.</p>
     </footer>
+
     <script>
         let signupform = document.getElementById("signupform");
 
-        signupform.addEventListener('submit' , (e)=>{
+        signupform.addEventListener("submit", async (e) => {
             e.preventDefault();
-            let username = document.getElementById("UserName").value;
-        let email = document.getElementById("Email").value;
-        let pwd = document.getElementById("Password").value;
-        let ConfirmPWD = document.getElementById("ConfirmPWD").value;
-        let mobno = document.getElementById("MOBNO").value;
-        let date = document.getElementById("Date").value;
-        let is_admin = document.getElementById("isadmin").value;
-            if(pwd != ConfirmPWD){
-                alert("pwd donot match");
-            }
-             const userData = {
-            username: username,
-            email: email,
-            password: pwd,
-            phone: mobno,
-            is_admin: is_admin
-        };
-        fetch("http://127.0.0.1:8000/api/signup/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(userData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.id) {
-                alert("Sign up has been done successfully!");
-                window.location.href = "{% url 'login' %}";
-            } else {
-                alert("Error: " + (data.message || JSON.stringify(data)));
-            }
-        })
-        .catch(error => {
-            alert("An error occurred: " + error.message);
-        });
-    });
-        
 
+            let username = document.getElementById("UserName").value;
+            let email = document.getElementById("Email").value;
+            let pwd = document.getElementById("Password").value;
+            let ConfirmPWD = document.getElementById("ConfirmPWD").value;
+            let mobno = document.getElementById("MOBNO").value;
+            let date = document.getElementById("Date").value;
+            let is_admin = document.getElementById("isadmin").value;
+
+            if (pwd !== ConfirmPWD) {
+                alert("Passwords do not match");
+                return;
+            }
+
+            let data = {
+                username: username,
+                email: email,
+                password: pwd,
+                phone: mobno,
+                is_admin: is_admin,
+                // date_of_birth: date, // لو حابة تبعتي تاريخ الميلاد عشان تضيفي في backend
+            };
+
+            try {
+                let response = await fetch("/api/signup/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        // CSRF token not needed if @csrf_exempt في الـ backend
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                let result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    window.location.href = "{% url 'login' %}";
+                } else {
+                    alert("Error: " + (result.error || "Unknown error"));
+                }
+            } catch (error) {
+                alert("Request failed: " + error);
+            }
+        });
     </script>
 </body>
 </html>
