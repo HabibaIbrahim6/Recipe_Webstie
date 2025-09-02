@@ -90,7 +90,9 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # اتغير لـ staticfiles عشان PythonAnywhere
+  STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+  MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'recipe_finder_django/static')
 ]
